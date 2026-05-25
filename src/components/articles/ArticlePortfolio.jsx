@@ -9,7 +9,7 @@ import {Tag, Tags} from "/src/components/generic/Tags.jsx"
 import ArticleItemPreviewMenu from "/src/components/articles/partials/ArticleItemPreviewMenu.jsx"
 import {useLanguage} from "/src/providers/LanguageProvider.jsx"
 
-function matchesSearch(itemWrapper, query) {
+export function matchesSearch(itemWrapper, query) {
     if (!query.trim()) return true
     const q = query.toLowerCase()
     const title = (itemWrapper.locales.title || "").replace(/<[^>]+>/g, "").toLowerCase()
@@ -194,7 +194,7 @@ function ArticlePortfolioItemFooter({ itemWrapper }) {
  * @return {JSX.Element}
  * @constructor
  */
-function PortfolioSearchInput({ query, setQuery }) {
+export function PortfolioSearchInput({ query, setQuery }) {
     return (
         <div className={`portfolio-search-input`}>
             <i className={`fa-solid fa-magnifying-glass portfolio-search-input-icon`}/>

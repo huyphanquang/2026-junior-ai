@@ -9,6 +9,15 @@ import {Tag, Tags} from "/src/components/generic/Tags.jsx"
 import ArticleItemPreviewMenu from "/src/components/articles/partials/ArticleItemPreviewMenu.jsx"
 import {useLanguage} from "/src/providers/LanguageProvider.jsx"
 
+function matchesSearch(itemWrapper, query) {
+    if (!query.trim()) return true
+    const q = query.toLowerCase()
+    const title = (itemWrapper.locales.title || "").replace(/<[^>]+>/g, "").toLowerCase()
+    const text = (itemWrapper.locales.text || "").replace(/<[^>]+>/g, "").toLowerCase()
+    const tags = (itemWrapper.locales.tags || []).join(" ").toLowerCase()
+    return title.includes(q) || text.includes(q) || tags.includes(q)
+}
+
 /**
  * @param {ArticleDataWrapper} dataWrapper
  * @param {Number} id
@@ -158,6 +167,33 @@ function ArticlePortfolioItemFooter({ itemWrapper }) {
             <ArticleItemPreviewMenu itemWrapper={itemWrapper}
                                     spaceBetween={true}
                                     className={`article-portfolio-item-footer-menu`}/>
+        </div>
+    )
+}
+
+/**
+ * @param {String} query
+ * @param {Function} setQuery
+ * @return {JSX.Element}
+ * @constructor
+ */
+function PortfolioSearchInput({ query, setQuery }) {
+    return (
+        <div className={`portfolio-search-input`}>
+            <i className={`fa-solid fa-magnifying-glass portfolio-search-input-icon`}/>
+            <input
+                type="text"
+                className={`portfolio-search-input-field`}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={`Search projects...`}
+            />
+            {query && (
+                <button className={`portfolio-search-input-clear`}
+                        onClick={() => setQuery("")}>
+                    <i className={`fa-solid fa-xmark`}/>
+                </button>
+            )}
         </div>
     )
 }

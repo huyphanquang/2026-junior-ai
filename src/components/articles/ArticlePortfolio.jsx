@@ -9,6 +9,15 @@ import {Tag, Tags} from "/src/components/generic/Tags.jsx"
 import ArticleItemPreviewMenu from "/src/components/articles/partials/ArticleItemPreviewMenu.jsx"
 import {useLanguage} from "/src/providers/LanguageProvider.jsx"
 
+export function matchesSearch(itemWrapper, query) {
+    if (!query.trim()) return true
+    const q = query.toLowerCase()
+    const title = (itemWrapper.locales.title || "").replace(/<[^>]+>/g, "").toLowerCase()
+    const text = (itemWrapper.locales.text || "").replace(/<[^>]+>/g, "").toLowerCase()
+    const tags = (itemWrapper.locales.tags || []).join(" ").toLowerCase()
+    return title.includes(q) || text.includes(q) || tags.includes(q)
+}
+
 /**
  * @param {ArticleDataWrapper} dataWrapper
  * @param {Number} id
@@ -17,6 +26,7 @@ import {useLanguage} from "/src/providers/LanguageProvider.jsx"
  */
 function ArticlePortfolio({ dataWrapper, id }) {
     const [selectedItemCategoryId, setSelectedItemCategoryId] = useState(null)
+    const [searchQuery, setSearchQuery] = useState("")
 
     return (
         <Article id={dataWrapper.uniqueId}
@@ -26,7 +36,9 @@ function ArticlePortfolio({ dataWrapper, id }) {
                  selectedItemCategoryId={selectedItemCategoryId}
                  setSelectedItemCategoryId={setSelectedItemCategoryId}>
             <ArticlePortfolioItems dataWrapper={dataWrapper}
-                                   selectedItemCategoryId={selectedItemCategoryId}/>
+                                   selectedItemCategoryId={selectedItemCategoryId}
+                                   searchQuery={searchQuery}
+                                   setSearchQuery={setSearchQuery}/>
         </Article>
     )
 }
@@ -34,48 +46,62 @@ function ArticlePortfolio({ dataWrapper, id }) {
 /**
  * @param {ArticleDataWrapper} dataWrapper
  * @param {String} selectedItemCategoryId
+ * @param {String} searchQuery
+ * @param {Function} setSearchQuery
  * @return {JSX.Element}
  * @constructor
  */
-function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId }) {
+function ArticlePortfolioItems({ dataWrapper, selectedItemCategoryId, searchQuery, setSearchQuery }) {
     const constants = useConstants()
     const language = useLanguage()
     const viewport = useViewport()
 
-    const filteredItems = dataWrapper.getOrderedItemsFilteredBy(selectedItemCategoryId)
+    const categoryFilteredItems = dataWrapper.getOrderedItemsFilteredBy(selectedItemCategoryId)
+    const filteredItems = categoryFilteredItems.filter(item => matchesSearch(item, searchQuery))
     const customBreakpoint = viewport.getCustomBreakpoint(constants.SWIPER_BREAKPOINTS_FOR_THREE_SLIDES)
 
     const itemsPerRow = customBreakpoint?.slidesPerView || 1
     const itemsPerRowClass = `article-portfolio-items-${itemsPerRow}-per-row`
 
     const refreshFlag = dataWrapper.categories?.length ?
-        selectedItemCategoryId + "-" + language.getSelectedLanguage()?.id :
-        language.getSelectedLanguage()?.id
+        `${selectedItemCategoryId}-${language.getSelectedLanguage()?.id}::${searchQuery}` :
+        `${language.getSelectedLanguage()?.id}::${searchQuery}`
 
-    if(dataWrapper.categories?.length) {
-        return (
-            <Transitionable id={dataWrapper.uniqueId}
-                            refreshFlag={refreshFlag}
-                            delayBetweenItems={100}
-                            animation={Transitionable.Animations.POP}
-                            className={`article-portfolio-items ${itemsPerRowClass}`}>
-                {filteredItems.map((itemWrapper, key) => (
-                    <ArticlePortfolioItem itemWrapper={itemWrapper}
-                                          key={key}/>
-                ))}
-            </Transitionable>
-        )
-    }
-    else {
-        return (
-            <div className={`article-portfolio-items ${itemsPerRowClass} mb-3 mb-lg-2`}>
-                {filteredItems.map((itemWrapper, key) => (
-                    <ArticlePortfolioItem itemWrapper={itemWrapper}
-                                          key={key}/>
-                ))}
-            </div>
-        )
-    }
+    const itemsList = dataWrapper.categories?.length ? (
+        <Transitionable id={dataWrapper.uniqueId}
+                        refreshFlag={refreshFlag}
+                        delayBetweenItems={100}
+                        animation={Transitionable.Animations.POP}
+                        className={`article-portfolio-items ${itemsPerRowClass}`}>
+            {filteredItems.map((itemWrapper, key) => (
+                <ArticlePortfolioItem itemWrapper={itemWrapper}
+                                      key={key}/>
+            ))}
+        </Transitionable>
+    ) : (
+        <div className={`article-portfolio-items ${itemsPerRowClass} mb-3 mb-lg-2`}>
+            {filteredItems.map((itemWrapper, key) => (
+                <ArticlePortfolioItem itemWrapper={itemWrapper}
+                                      key={key}/>
+            ))}
+        </div>
+    )
+
+    const showEmptyState = filteredItems.length === 0 && searchQuery.trim().length > 0
+
+    return (
+        <>
+            <PortfolioSearchInput query={searchQuery}
+                                  setQuery={setSearchQuery}/>
+            {showEmptyState ? (
+                <div className={`portfolio-search-empty text-2`}>
+                    <i className={`fa-solid fa-magnifying-glass`}/>
+                    <p>No projects found for <strong>"{searchQuery}"</strong></p>
+                    <p className={`portfolio-search-empty-hint`}>Try a different keyword or clear the search</p>
+                </div>
+            ) : itemsList}
+        </>
+    )
 }
 
 /**
@@ -158,6 +184,33 @@ function ArticlePortfolioItemFooter({ itemWrapper }) {
             <ArticleItemPreviewMenu itemWrapper={itemWrapper}
                                     spaceBetween={true}
                                     className={`article-portfolio-item-footer-menu`}/>
+        </div>
+    )
+}
+
+/**
+ * @param {String} query
+ * @param {Function} setQuery
+ * @return {JSX.Element}
+ * @constructor
+ */
+export function PortfolioSearchInput({ query, setQuery }) {
+    return (
+        <div className={`portfolio-search-input`}>
+            <i className={`fa-solid fa-magnifying-glass portfolio-search-input-icon`}/>
+            <input
+                type="text"
+                className={`portfolio-search-input-field`}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={`Search projects...`}
+            />
+            {query && (
+                <button className={`portfolio-search-input-clear`}
+                        onClick={() => setQuery("")}>
+                    <i className={`fa-solid fa-xmark`}/>
+                </button>
+            )}
         </div>
     )
 }

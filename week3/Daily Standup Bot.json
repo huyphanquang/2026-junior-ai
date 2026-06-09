@@ -1,0 +1,178 @@
+{
+  "name": "Daily Standup Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/huyphanquang/2026-junior-ai/commits",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {},
+            {
+              "name": "since",
+              "value": "=={{ new Date(Date.now() - 30*60*60*1000).toISOString() }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GITHUB_TOKEN_HERE"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "GitHub Commits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        912,
+        288
+      ],
+      "id": "7f116145-65e1-489c-ab90-f6a6ba88ea6f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst commits = items.map(item => {\n  const c = item.json;\n  return `- ${c.commit?.message?.split('\\n')[0] || 'No message'} (${c.sha?.substring(0,7)})`;\n}).join('\\n') || '- No commits found';\n\nconst fullPrompt = \"You are a standup assistant. Write a daily standup with Yesterday/Today/Blockers sections based on these GitHub commits:\\n\\n\" + commits;\n\nreturn [{ json: { fullPrompt, commits } }];"
+      },
+      "name": "Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        288
+      ],
+      "id": "96471d46-3e5c-40b3-a8d6-49a7556ca51a"
+    },
+    {
+      "parameters": {
+        "connectionMode": "docker",
+        "prompt": "={{ $input.first().json.fullPrompt }}",
+        "toolPermissions": {},
+        "agents": {
+          "agentsList": []
+        },
+        "mcpServers": {
+          "serversList": []
+        },
+        "options": {}
+      },
+      "name": "Claude Standup",
+      "type": "n8n-nodes-claude-code-cli.claudeCode",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        288
+      ],
+      "id": "cebc305e-92cd-45be-9806-6235753c3241",
+      "credentials": {
+        "claudeCodeDockerApi": {
+          "id": "8QLNXECFV5BP5Awj",
+          "name": "Claude Code Local account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        688,
+        288
+      ],
+      "id": "d5e12cc3-9f7a-4d86-b4af-5c61a0acbd09"
+    },
+    {
+      "parameters": {
+        "path": "07bdf28b-2144-465f-be8e-c6af1f81ee43",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        128
+      ],
+      "id": "1232adf7-83a6-472d-8c0a-72a15edbe04d",
+      "name": "Webhook",
+      "webhookId": "07bdf28b-2144-465f-be8e-c6af1f81ee43"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GitHub Commits": {
+      "main": [
+        [
+          {
+            "node": "Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {
+            "node": "Claude Standup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "GitHub Commits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "GitHub Commits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6df5ccac-9525-42d6-9590-a3bee87a9f72",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "21b3f2a276e2ac227458c915991336e9df3f7e8e95f48848074cece12f7c6a24"
+  },
+  "nodeGroups": [],
+  "id": "2lCSdVb7RrYWBjM6",
+  "tags": []
+}

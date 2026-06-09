@@ -93,3 +93,80 @@ div.article-portfolio-item-body {
 div.article-portfolio-item-footer {
     margin-top: 10px;
 }
+
+/** ---------------- SEARCH INPUT ---------------- */
+div.portfolio-search-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: $standard-border-radius;
+    margin-bottom: 14px;
+    background-color: var(--theme-boards-background);
+    border: 2px solid var(--theme-standard-borders);
+    transition: border-color 0.2s ease;
+
+    &:focus-within {
+        border-color: var(--theme-primary);
+    }
+
+    i.portfolio-search-input-icon {
+        color: var(--theme-texts-light);
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    input.portfolio-search-input-field {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--theme-texts);
+        font-size: 0.85rem;
+        min-width: 0;
+
+        &::placeholder {
+            color: var(--theme-texts-light-2);
+        }
+    }
+
+    button.portfolio-search-input-clear {
+        background: none;
+        border: none;
+        color: var(--theme-texts-light-2);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        flex-shrink: 0;
+        opacity: 0.6;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
+/** ---------------- SEARCH EMPTY STATE ---------------- */
+div.portfolio-search-empty {
+    color: var(--theme-texts-light-2);
+    padding: 2rem 0;
+    text-align: center;
+
+    i {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    p.portfolio-search-empty-hint {
+        margin-top: 4px;
+        font-size: 0.75rem;
+        opacity: 0.6;
+    }
+}

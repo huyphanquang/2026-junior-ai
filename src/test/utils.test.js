@@ -83,9 +83,3 @@ describe('_validationUtils.isSpam', () => {
   })
 })
 
-// ❌ INTENTIONAL FAIL - để demo backpressure (red → green)
-describe('INTENTIONAL FAILURE - backpressure demo', () => {
-  it('❌ test sai có chủ ý: email hợp lệ nhưng expect false', () => {
-    expect(_validationUtils.validateEmail('huy@example.com')).toBe(false)
-  })
-})
